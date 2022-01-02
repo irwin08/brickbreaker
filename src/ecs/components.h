@@ -2,7 +2,7 @@
 #define COMPONENTS_H
 
 #include "ecs.h"
-
+#include <tuple>
 
 
 namespace ecs {
@@ -29,6 +29,7 @@ namespace ecs {
             sf::Sprite generate_sprite() {
                 sf::Sprite sprite{};
                 //return sf::Sprite(this->texture);
+                sprite.setPosition(this->world->get_entity_by_id(entity_id).x,this->world->get_entity_by_id(entity_id).y);
                 sprite.setTexture(this->texture);
                 sprite.setTextureRect(texture_rect);
                 return sprite;
@@ -49,6 +50,13 @@ namespace ecs {
                 this->entity_id = entity_id;
                 this->world = world;
 
+            }
+
+            std::tuple<int*, int*> get_coords() {
+                int *x = &world->get_entity_by_id(this->entity_id).x;
+                int *y = &world->get_entity_by_id(this->entity_id).y;
+
+                return std::tie(x,y);
             }
 
     };

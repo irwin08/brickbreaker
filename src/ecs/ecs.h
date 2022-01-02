@@ -30,7 +30,8 @@ namespace ecs {
 
     struct GameObject {
             int x, y;
-            int velocity;
+            int velocity_x=0;
+            int velocity_y=0;
             std::uint64_t id;
 
             std::vector<ComponentHandle> components;
@@ -54,14 +55,16 @@ namespace ecs {
                 std::uint64_t id;
                 if(map.find(T::type_id) == map.end()) {
                     type_map.emplace(T::type_id, typeid(T));
-                    map.emplace(T::type_id, std::vector<std::any>{std::move(t)});
                     id = get_new_id();
+                    t.id = id;
+                    map.emplace(T::type_id, std::vector<std::any>{std::move(t)});
+                    
                 }
                 else {
                     id = get_new_id();
+                    t.id = id;
                     map.at(T::type_id).push_back(t);
                 }
-                t.id = id;
                 return ComponentHandle{T::type_id, id};
             }
 
@@ -108,7 +111,7 @@ namespace ecs {
                 for(auto& object : objects) {
                     for(auto component : object.components) {
                         if(component_manager.type_map.at(component.type_id) == typeid(T))
-                        func(component_manager.access_component<T>(component.id));
+                            func(component_manager.access_component<T>(component.id));
                     }
                 }
             }

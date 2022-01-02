@@ -18,11 +18,14 @@ int main()
     ecs::World world;
 
     ecs::DrawingSystem drawing(&window);
+    ecs::GravitySystem physics(-2);
 
     world.registerSystem(std::make_unique<ecs::DrawingSystem>(drawing));
+    world.registerSystem(std::make_unique<ecs::GravitySystem>(physics));
 
     std::uint64_t boris_id = world.addEntity();
-    world.add_component_to_id<ecs::GraphicsComponent>(&world, boris_id, "textures/cobrameeting.PNG", 5,5,40,40);
+    world.add_component_to_id<ecs::GraphicsComponent>(&world, boris_id, "textures/cobrameeting.PNG", 5,5,200,200);
+    world.add_component_to_id<ecs::PhysicsComponent>(&world, boris_id);
 
     while(window.isOpen()) {
 
