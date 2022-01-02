@@ -8,6 +8,7 @@
 #include <typeindex>
 #include <SFML/Graphics.hpp>
 #include <exception>
+#include <ranges>
 
 
 namespace ecs {
@@ -17,9 +18,10 @@ namespace ecs {
     class World;
 
     struct Component {
-        std::uint64_t id;
+        inline static std::uint64_t id;
         std::uint64_t entity_id;
         World *world;
+
     };
 
 
@@ -105,13 +107,35 @@ namespace ecs {
 
     class World {
         public:
-            //need to make a version that affects entities with intersection of components
+           /* //need to make a version that affects entities with intersection of components
             template <typename T, typename F>
             void each(F func) {
                 for(auto& object : objects) {
                     for(auto component : object.components) {
                         if(component_manager.type_map.at(component.type_id) == typeid(T))
                             func(component_manager.access_component<T>(component.id));
+                    }
+                }
+            }*/
+
+            template <typename... Ts, typename F>
+            void each(F func) {
+                for(auto& object : objects) {
+                    auto range = (object.components | std::views::filter([](auto component){ 
+                        std::vector<std::uint64_t> vec = {(Ts::id)...};
+                        return (std::find(vec.begin(), vec.end(), component.id) != vec.end());
+                    }));
+
+                    if(std::distance(range.begin(), range.end()) == sizeof...(Ts)) {
+                        std::vector<std::tuple<std::uint64_t, std::uint64_t>> data;
+                        for(auto elem : range) {
+                            auto tup = std::make_tuple(elem.type_id, elem.id);
+                            
+                            data.push_back(tup);
+                        }
+
+                        func(data);
+
                     }
                 }
             }
@@ -155,10 +179,11 @@ namespace ecs {
                 throw std::runtime_error("Bad entity id, does not exist");
             }
 
+            ComponentManager component_manager;
         private:
             std::vector<GameObject> objects;
             std::vector<std::unique_ptr<System>> systems;
-            ComponentManager component_manager;
+            
 
             std::stack<std::uint64_t> available_object_ids;
             std::uint64_t next_unused = 0;
