@@ -55,29 +55,29 @@ namespace ecs {
             ComponentHandle generate_component(Args&&... args) {
                 T t{std::forward<Args>(args)...};
                 std::uint64_t id;
-                if(map.find(T::type_id) == map.end()) {
-                    type_map.emplace(T::type_id, typeid(T));
+                if(map.find(T::id) == map.end()) {
+                    type_map.emplace(T::id, typeid(T));
                     id = get_new_id();
                     t.id = id;
-                    map.emplace(T::type_id, std::vector<std::any>{std::move(t)});
+                    map.emplace(T::id, std::vector<std::any>{std::move(t)});
                     
                 }
                 else {
                     id = get_new_id();
                     t.id = id;
-                    map.at(T::type_id).push_back(t);
+                    map.at(T::id).push_back(t);
                 }
-                return ComponentHandle{T::type_id, id};
+                return ComponentHandle{T::id, id};
             }
 
             //NOTE: this is a reference to an element of a vector, hence it should be thought of as "one-and-done". Always access by id.
             template<typename T> 
             T& access_component(std::uint64_t id) {
-                for(auto& elem : map.at(T::type_id)) {
+                for(auto& elem : map.at(T::id)) {
                     if(std::any_cast<T&>(elem).id == id)
                         return std::any_cast<T&>(elem);
                 }
-                return std::any_cast<T&>(map.at(T::type_id).at(id));
+                return std::any_cast<T&>(map.at(T::id).at(id));
             }
 
 

@@ -3,6 +3,7 @@
 
 #include "ecs.h"
 #include <tuple>
+#include <queue>
 
 
 namespace ecs {
@@ -10,7 +11,7 @@ namespace ecs {
 
     class GraphicsComponent : public Component {
         public:
-            inline static std::uint64_t type_id = 0;
+            inline static std::uint64_t id = 0;
 
 
             GraphicsComponent(World *world, std::uint64_t entity_id, std::string texture_file, int x, int y, int w, int h) {
@@ -43,11 +44,12 @@ namespace ecs {
                 return *this;
             }
 
-            static GraphicsComponent find_graphics(World& world, std::vector<std::tuple<std::uint64_t, std::uint64_t>>& components) {
+            static GraphicsComponent& find_graphics(World& world, std::vector<std::tuple<std::uint64_t, std::uint64_t>>& components) {
                 for(auto tup : components) {
-                    if(std::get<0>(tup) == GraphicsComponent::type_id)
+                    if(std::get<0>(tup) == GraphicsComponent::id)
                         return world.component_manager.access_component<GraphicsComponent>(std::get<1>(tup));
                 }
+                throw std::runtime_error("Unable to find GraphicsComponent");
             }
 
 
@@ -70,7 +72,7 @@ namespace ecs {
     //no move semantics might implement later
     class PhysicsComponent : public Component {
         public:
-            inline static std::uint64_t type_id = 1;
+            inline static std::uint64_t id = 1;
 
             PhysicsComponent(World *world, std::uint64_t entity_id) {
                 this->entity_id = entity_id;
@@ -99,11 +101,16 @@ namespace ecs {
                 return std::tie(x,y);
             }
 
-            static PhysicsComponent find_physics(World& world, std::vector<std::tuple<std::uint64_t, std::uint64_t>>& components) {
+            int* get_velocity_x() {
+                return &world->get_entity_by_id(this->entity_id).velocity_x;
+            }
+
+            static PhysicsComponent& find_physics(World& world, std::vector<std::tuple<std::uint64_t, std::uint64_t>>& components) {
                 for(auto tup : components) {
-                    if(std::get<0>(tup) == PhysicsComponent::type_id)
+                    if(std::get<0>(tup) == PhysicsComponent::id)
                         return world.component_manager.access_component<PhysicsComponent>(std::get<1>(tup));
                 }
+                throw std::runtime_error("Unable to find PhysicsComponent");
             }
 
     };
@@ -112,8 +119,9 @@ namespace ecs {
     //no move semantics, might implement later
     class InputComponent : public Component {
     public:
-        inline static std::uint64_t type_id = 2;
+        inline static std::uint64_t id = 2;
 
+        std::queue<sf::Event::KeyEvent> keys_pressed;
 
         InputComponent(World *world, std::uint64_t entity_id) {
             this->entity_id = entity_id;
@@ -123,6 +131,7 @@ namespace ecs {
         InputComponent(const InputComponent& copy) {
             this->entity_id = copy.entity_id;
             this->world = copy.world;
+            this->keys_pressed = copy.keys_pressed;
         }
 
         ~InputComponent() {}
@@ -131,14 +140,16 @@ namespace ecs {
             if(this == &copy) return *this;
             this->world = copy.world;
             this->entity_id = copy.entity_id;
+            this->keys_pressed = copy.keys_pressed;
             return *this;
         }
 
-        static InputComponent find_input(World& world, std::vector<std::tuple<std::uint64_t, std::uint64_t>>& components) {
+        static InputComponent& find_input(World& world, std::vector<std::tuple<std::uint64_t, std::uint64_t>>& components) {
                 for(auto tup : components) {
-                    if(std::get<0>(tup) == InputComponent::type_id)
+                    if(std::get<0>(tup) == InputComponent::id)
                         return world.component_manager.access_component<InputComponent>(std::get<1>(tup));
                 }
+                throw std::runtime_error("Unable to find InputComponent");
         }
 
         
