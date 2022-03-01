@@ -33,6 +33,10 @@ int main()
     world.add_component_to_id<ecs::PhysicsComponent>(&world, boris_id);
     world.add_component_to_id<ecs::InputComponent>(&world, boris_id);
 
+    //std::uint64_t other_id = world.addEntity();
+    //world.add_component_to_id<ecs::GraphicsComponent>(&world, other_id, "textures/cobrameeting.PNG", 350,5,200,200);
+    //world.add_component_to_id<ecs::PhysicsComponent>(&world, other_id);
+
     sf::Clock clock;
 
     while(window.isOpen()) {
@@ -66,8 +70,8 @@ int main()
         sf::Time time_2 = clock.getElapsedTime();
         
         auto elapsed = (time_2.asMilliseconds() - time_1.asMilliseconds());
-        if(elapsed < 16)
-            sf::sleep(sf::Time(sf::milliseconds(16-elapsed)));
+        //if(elapsed < 16)
+        //    sf::sleep(sf::Time(sf::milliseconds(16-elapsed)));
 
         world.tick(1);
 

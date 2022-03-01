@@ -17,7 +17,13 @@ namespace ecs {
 
         void tick(World& world, float deltaTime) override {
             window->clear(sf::Color::Green);
-            world.each<GraphicsComponent>([&](std::vector<std::tuple<std::uint64_t, std::uint64_t>>& components){ GraphicsComponent& pComp = world.component_manager.access_component<GraphicsComponent>(std::get<1>(components[0])); window->draw(pComp.generate_sprite()); });
+            world.each<GraphicsComponent>([&](std::vector<std::tuple<std::uint64_t, std::uint64_t>>& components)
+            { 
+                for(auto& component : components) {
+                    GraphicsComponent& pComp = world.component_manager.access_component<GraphicsComponent>(std::get<1>(component)); 
+                    window->draw(pComp.generate_sprite()); 
+                }
+            });
         }
 
         private:
@@ -32,12 +38,17 @@ namespace ecs {
 
         void tick(World& world, float deltaTime) override {
             world.each<PhysicsComponent>([&](std::vector<std::tuple<std::uint64_t, std::uint64_t>>& components){
-                PhysicsComponent& pComp = world.component_manager.access_component<PhysicsComponent>(std::get<1>(components[0]));
-                auto coords = pComp.get_coords(); 
+                    for(auto& component : components) {
+                    PhysicsComponent& pComp = world.component_manager.access_component<PhysicsComponent>(std::get<1>(component));
+                    auto coords = pComp.get_coords(); 
 
-                if((*std::get<1>(coords) <= 300) && (*std::get<1>(coords) > 0)) {
-                    (*std::get<1>(coords)) -= (gravity*deltaTime);
-                } 
+                    std::cout << "y: " << *std::get<1>(coords) << std::endl;
+                    if((*std::get<1>(coords) <= 300) && (*std::get<1>(coords) > 0)) {
+                        (*std::get<1>(coords)) -= (gravity*deltaTime);
+                        std:: cout << "Hello from the tickeroni!!!" << std::endl;
+                    } 
+
+                }
             });
         }
 
@@ -49,19 +60,21 @@ namespace ecs {
     public:
         void tick(World& world, float deltaTime) override {
             world.each<PhysicsComponent>([&](std::vector<std::tuple<std::uint64_t, std::uint64_t>>& components){
-                PhysicsComponent& pComp = world.component_manager.access_component<PhysicsComponent>(std::get<1>(components[0])); 
-                auto coords = pComp.get_coords(); 
-                auto vel_x = pComp.get_velocity_x();
+                for(auto& component : components) {
+                    PhysicsComponent& pComp = world.component_manager.access_component<PhysicsComponent>(std::get<1>(component)); 
+                    auto coords = pComp.get_coords(); 
+                    auto vel_x = pComp.get_velocity_x();
 
-                *std::get<0>(coords) += (*vel_x * deltaTime);
+                    *std::get<0>(coords) += (*vel_x * deltaTime);
 
-                //slow with friction
-                if(*vel_x > 0)
-                    *vel_x -= 0.5;
-                else if(*vel_x < 0)
-                    *vel_x += 0.5;
-
+                    //slow with friction
+                    if(*vel_x > 0)
+                        *vel_x -= 0.5;
+                    else if(*vel_x < 0)
+                        *vel_x += 0.5;
+                }
             });
+            
         }
 
     };

@@ -27,14 +27,14 @@ namespace ecs {
 
     struct ComponentHandle {
         std::uint64_t type_id;
-        std::uint64_t id;
+        std::uint64_t entity_id;
     };
 
     struct GameObject {
             int x, y;
             int velocity_x=0;
             int velocity_y=0;
-            std::uint64_t id;
+            std::uint64_t entity_id;
 
             std::vector<ComponentHandle> components;
     };
@@ -54,37 +54,44 @@ namespace ecs {
             template<typename T, typename... Args>
             ComponentHandle generate_component(Args&&... args) {
                 T t{std::forward<Args>(args)...};
-                std::uint64_t id;
-                if(map.find(T::id) == map.end()) {
-                    type_map.emplace(T::id, typeid(T));
-                    id = get_new_id();
-                    t.id = id;
-                    map.emplace(T::id, std::vector<std::any>{std::move(t)});
+                std::uint64_t entity_id;
+
+
+
+
+                if(types_to_id_to_component_map.find(T::id) == types_to_id_to_component_map.end()) {
+                    entity_id = get_new_id();
+                    t.entity_id = entity_id;
+                    types_to_id_to_component_map.emplace(T::id, std::vector<std::any>{std::move(t)});
                     
                 }
                 else {
-                    id = get_new_id();
-                    t.id = id;
-                    map.at(T::id).push_back(t);
+                    std::cout << "Contains key?: ";
+                    std::cout << (types_to_id_to_component_map.find(T::id) == types_to_id_to_component_map.end()) << std::endl;
+
+                    entity_id = get_new_id();
+                    t.entity_id = entity_id;
+
+
+                    types_to_id_to_component_map.at(T::id).push_back(t);
                 }
-                return ComponentHandle{T::id, id};
+                return ComponentHandle{T::id, entity_id};
             }
 
             //NOTE: this is a reference to an element of a vector, hence it should be thought of as "one-and-done". Always access by id.
             template<typename T> 
-            T& access_component(std::uint64_t id) {
-                for(auto& elem : map.at(T::id)) {
-                    if(std::any_cast<T&>(elem).id == id)
+            T& access_component(std::uint64_t entity_id) {
+                for(auto& elem : types_to_id_to_component_map.at(T::id)) {
+                    if(std::any_cast<T&>(elem).entity_id == entity_id)
                         return std::any_cast<T&>(elem);
                 }
-                return std::any_cast<T&>(map.at(T::id).at(id));
+                throw std::runtime_error("Tried to access component with unknown id!");
             }
 
 
-            std::map<std::uint64_t, std::type_index> type_map;
         private:
-            
-            std::map<std::uint64_t, std::vector<std::any>> map;
+            // std::vector<std::any> 
+            std::map<std::uint64_t, std::vector<std::any>> types_to_id_to_component_map;
             std::stack<std::uint64_t> available_ids;
             std::uint64_t next_unused = 0;
 
@@ -121,15 +128,16 @@ namespace ecs {
             template <typename... Ts, typename F>
             void each(F func) {
                 for(auto& object : objects) {
+                    //this range may have been messed up by my id <--> entity_id edits
                     auto range = (object.components | std::views::filter([](auto component){ 
                         std::vector<std::uint64_t> vec = {(Ts::id)...};
-                        return (std::find(vec.begin(), vec.end(), component.id) != vec.end());
+                        return (std::find(vec.begin(), vec.end(), component.entity_id) != vec.end());
                     }));
 
                     if(std::distance(range.begin(), range.end()) == sizeof...(Ts)) {
                         std::vector<std::tuple<std::uint64_t, std::uint64_t>> data;
                         for(auto elem : range) {
-                            auto tup = std::make_tuple(elem.type_id, elem.id);
+                            auto tup = std::make_tuple(elem.type_id, elem.entity_id);
                             
                             data.push_back(tup);
                         }
@@ -143,16 +151,16 @@ namespace ecs {
             //return id of entity
             std::uint64_t addEntity() {
                 GameObject object;
-                object.id = get_new_id();
+                object.entity_id = get_new_id();
                 objects.emplace_back(object);
-                return object.id;
+                return object.entity_id;
             }
 
             template<typename T, typename... Args>
             void add_component_to_id(World *world, std::uint64_t entity_id, Args&&... args) {
                 auto handle = component_manager.generate_component<T>(world, entity_id, std::forward<Args>(args)...);
                 for(auto& object : objects) {
-                    if(object.id == entity_id) {
+                    if(object.entity_id == entity_id) {
                         object.components.emplace_back(handle);
                     }
                 }
@@ -171,7 +179,7 @@ namespace ecs {
 
             GameObject& get_entity_by_id(std::uint64_t entity_id) {
                 for(auto& object : objects) {
-                    if(object.id == entity_id) {
+                    if(object.entity_id == entity_id) {
                         return object;
                     }
                 }
