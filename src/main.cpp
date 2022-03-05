@@ -33,9 +33,9 @@ int main()
     world.add_component_to_id<ecs::PhysicsComponent>(&world, boris_id);
     world.add_component_to_id<ecs::InputComponent>(&world, boris_id);
 
-    //std::uint64_t other_id = world.addEntity();
-    //world.add_component_to_id<ecs::GraphicsComponent>(&world, other_id, "textures/cobrameeting.PNG", 350,5,200,200);
-    //world.add_component_to_id<ecs::PhysicsComponent>(&world, other_id);
+    std::uint64_t other_id = world.addEntity();
+    world.add_component_to_id<ecs::GraphicsComponent>(&world, other_id, "textures/cobrameeting.PNG", 350,5,200,200);
+    world.add_component_to_id<ecs::PhysicsComponent>(&world, other_id);
 
     sf::Clock clock;
 

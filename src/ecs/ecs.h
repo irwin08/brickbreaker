@@ -128,7 +128,7 @@ namespace ecs {
                     //this range may have been messed up by my id <--> entity_id edits
                     auto range = (object.components | std::views::filter([](auto component){ 
                         std::vector<std::uint64_t> vec = {(Ts::id)...};
-                        return (std::find(vec.begin(), vec.end(), component.entity_id) != vec.end());
+                        return (std::find(vec.begin(), vec.end(), component.type_id) != vec.end());
                     }));
 
                     if(std::distance(range.begin(), range.end()) == sizeof...(Ts)) {
