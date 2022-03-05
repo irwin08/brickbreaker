@@ -52,15 +52,13 @@ namespace ecs {
     class ComponentManager {
         public:
             template<typename T, typename... Args>
-            ComponentHandle generate_component(Args&&... args) {
-                T t{std::forward<Args>(args)...};
-                std::uint64_t entity_id;
+            ComponentHandle generate_component(World *world, std::uint64_t entity_id, Args&&... args) {
 
 
+                T t{world, entity_id, std::forward<Args>(args)...};
 
 
                 if(types_to_id_to_component_map.find(T::id) == types_to_id_to_component_map.end()) {
-                    entity_id = get_new_id();
                     t.entity_id = entity_id;
                     types_to_id_to_component_map.emplace(T::id, std::vector<std::any>{std::move(t)});
                     
@@ -69,7 +67,6 @@ namespace ecs {
                     std::cout << "Contains key?: ";
                     std::cout << (types_to_id_to_component_map.find(T::id) == types_to_id_to_component_map.end()) << std::endl;
 
-                    entity_id = get_new_id();
                     t.entity_id = entity_id;
 
 
